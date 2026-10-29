@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PULLXEDGE | Star Sports Live</title>
+  <meta name="referrer" content="no-referrer">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #0F1018;
+      --surface-soft: rgba(255,255,255,0.035);
+      --border: rgba(255,255,255,0.09);
+      --amber: #38BDF8;
+      --amber-dim: rgba(56,189,248,0.14);
+      --led: #7DD3FC;
+      --chalk: #F0F6FB;
+      --dim: #7C97AC;
+
+      --font-display: 'Oswald', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: auto !important;
+      -webkit-user-select: auto !important;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--chalk);
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Ambient floodlight glow + faint pitch lines */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(56,189,248,0.22), transparent 50%),
+        radial-gradient(circle at 90% 20%, rgba(167,139,250,0.18), transparent 50%),
+        radial-gradient(circle at 30% 100%, rgba(56,189,248,0.12), transparent 55%),
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 2px, transparent 2px, transparent 26px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Cricket motif: scattered stumps + ball seams */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      opacity: 0.05;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%2338BDF8' stroke-width='2.5'%3E%3Cline x1='20' y1='10' x2='20' y2='50'/%3E%3Cline x1='28' y1='10' x2='28' y2='50'/%3E%3Cline x1='36' y1='10' x2='36' y2='50'/%3E%3Cline x1='14' y1='8' x2='42' y2='8'/%3E%3Ccircle cx='120' cy='110' r='14'/%3E%3Cpath d='M108 110 Q120 100 132 110' /%3E%3Cpath d='M108 110 Q120 120 132 110' /%3E%3C/g%3E%3C/svg%3E");
+      background-size: 220px 220px;
+      background-repeat: repeat;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 22px 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== Scoreboard header ===== */
+    .scoreboard-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 18px;
+    }
+
+    .brand-block .brand {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .brand-block .brand .accent { color: var(--amber); }
+
+    .brand-block .brand-sub {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-top: 4px;
+    }
+
+    @keyframes rgbSweep {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    .rgb-glow {
+      background: linear-gradient(90deg, #38BDF8, #818CF8, #A78BFA, #38BDF8, #818CF8, #A78BFA, #38BDF8) !important;
+      background-size: 300% auto !important;
+      animation: rgbSweep 6s linear infinite !important;
+      color: #08121C !important;
+      box-shadow: 0 0 22px rgba(129,140,248,0.35), 0 0 40px rgba(56,189,248,0.18);
+    }
+
+    .join-btn {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #0A1410;
+      background: var(--amber);
+      padding: 11px 16px;
+      text-decoration: none;
+      border: none;
+      flex-shrink: 0;
+      border-radius: 100px;
+      transition: opacity 0.15s ease;
+    }
+    .join-btn:active { opacity: 0.8; }
+
+    /* ===== Readout strip ===== */
+    .readout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .readout h2 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--led);
+      flex-shrink: 0;
+    }
+    .live-indicator .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--led);
+      box-shadow: 0 0 0 0 rgba(125,211,252,0.55);
+      animation: pulseLed 1.8s infinite;
+    }
+    @keyframes pulseLed {
+      0%   { box-shadow: 0 0 0 0 rgba(125,211,252,0.55); }
+      70%  { box-shadow: 0 0 0 7px rgba(125,211,252,0); }
+      100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); }
+    }
+
+    /* ===== Jumbotron / video frame ===== */
+    .jumbotron {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #0B1320, #15182C 50%, #1A1430);
+      border: 9px solid var(--surface);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+
+    .jumbotron iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: transparent;
+    }
+
+    .bolt {
+      position: absolute;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      z-index: 3;
+    }
+    .bolt.tl { top: 8px; left: 8px; }
+    .bolt.tr { top: 8px; right: 8px; }
+    .bolt.bl { bottom: 8px; left: 8px; }
+    .bolt.br { bottom: 8px; right: 8px; }
+
+    .error-overlay {
+      position: absolute; inset: 0;
+      background: rgba(4,8,6,0.94);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 11; gap: 14px; padding: 24px; text-align: center;
+    }
+    .error-overlay.visible { display: flex; }
+    .error-message {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--dim);
+      max-width: 300px;
+      line-height: 1.6;
+    }
+
+    .retry-btn {
+      font-family: var(--font-mono);
+      padding: 11px 26px;
+      background: var(--amber);
+      color: #0A1410; border: none;
+      font-weight: 700; font-size: 13px; letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 100px;
+    }
+
+    /* ===== Meta line ===== */
+    .meta-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 12px 2px 22px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+    .meta-line .quality-pill {
+      color: var(--amber);
+      border: 1px solid rgba(56,189,248,0.35);
+      border-radius: 100px;
+      padding: 3px 9px;
+      font-size: 10px;
+    }
+
+    /* ===== Ticker marquee ===== */
+    .ticker {
+      overflow: hidden;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-soft);
+      padding: 11px 0;
+      margin-bottom: 22px;
+    }
+    .ticker-track {
+      display: inline-flex;
+      animation: tickerScroll 24s linear infinite;
+    }
+    .ticker-track span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--amber);
+      padding-right: 40px;
+    }
+    @keyframes tickerScroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ===== Dugout (CTA) panel ===== */
+    .dugout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--amber);
+      border-radius: 18px;
+      padding: 18px 16px;
+      margin-bottom: 22px;
+    }
+    .dugout .tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 8px;
+    }
+    .dugout h2 {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .dugout p {
+      font-size: 13px;
+      color: var(--dim);
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .btn-solid-red {
+      font-family: var(--font-mono);
+      background: var(--amber);
+      color: #0A1410;
+      width: 100%;
+      padding: 14px;
+      font-weight: 700;
+      font-size: 12.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 100px;
+      transition: transform 0.15s ease;
+    }
+    .btn-solid-red:active { transform: scale(0.98); }
+
+    .utility-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .util-btn {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--chalk);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .util-btn:active {
+      background: var(--amber-dim);
+      border-color: var(--amber);
+    }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      color: var(--chalk);
+      font-family: var(--font-mono);
+      padding: 12px 22px;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-radius: 100px;
+      z-index: 2000; pointer-events: none; opacity: 0;
+      transition: all 0.35s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--led);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== Telegram gating popup ===== */
+    .popup-overlay {
+      position: fixed; inset: 0; background: rgba(4,8,6,0.88);
+      backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 9999; padding: 20px;
+    }
+    .popup-overlay.visible { display: flex; }
+    .popup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--amber);
+      border-radius: 20px;
+      padding: 36px 26px;
+      text-align: center;
+      max-width: 380px; width: 100%;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+    .popup-card .tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+    .popup-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .popup-p {
+      color: var(--dim);
+      margin-bottom: 26px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .already-joined-btn {
+      font-family: var(--font-mono);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--dim);
+      padding: 11px 22px;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 18px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .already-joined-btn:active { border-color: var(--amber); color: var(--chalk); }
+
+    /* ===== Footer ===== */
+    footer {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-top: 8px;
+      padding-bottom: 30px;
+      line-height: 2;
+    }
+    footer .copyright {
+      font-weight: 700;
+      color: var(--amber);
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ticker-track, .live-indicator .dot, .rgb-glow { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Premium PULLXEDGE Gating Popup Overlay -->
+<div id="tgPopup" class="popup-overlay">
+  <div class="popup-card">
+    <div class="tag">Access Required</div>
+    <div class="popup-title">Welcome</div>
+    <p class="popup-p">Join our community for alternative high-definition match streams, live links &amp; fast clip updates!</p>
+    <button class="btn-solid-red" id="tgJoinBtn">Join Channel</button>
+    <button class="already-joined-btn" id="tgCloseBtn">I'm already joined</button>
+  </div>
+</div>
+
+<div class="app-container">
+
+  <!-- Header -->
+  <div class="scoreboard-header">
+    <div class="brand-block">
+      <div class="brand">PULL<span class="accent">X</span>EDGE</div>
+      <div class="brand-sub">Live Sports Feed</div>
+    </div>
+    <a href="https://t.me/+P6m_25mcK3s2NTk1" class="join-btn rgb-glow" target="_blank">Join</a>
+  </div>
+
+  <!-- Readout -->
+  <div class="readout">
+    <h2 id="channelNameDisplay">Sony Sports Hindi</h2>
+    <div class="live-indicator"><span class="dot"></span>Live</div>
+  </div>
+
+  <!-- Jumbotron / Video frame -->
+  <div class="jumbotron">
+    <iframe id="streamFrame" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>
+    <span class="bolt tl"></span>
+    <span class="bolt tr"></span>
+    <span class="bolt bl"></span>
+    <span class="bolt br"></span>
+    <div id="errorOverlay" class="error-overlay">
+      <p id="errorMsg" class="error-message">Streaming source link expired or pipeline reset. Reconnecting...</p>
+      <button class="retry-btn" id="retryBtn">Retry Connection</button>
+    </div>
+  </div>
+
+  <!-- Meta line -->
+  <div class="meta-line">
+    <span>Cricket • Broadcast</span>
+    <span class="quality-pill">HD</span>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>New backup links drop daily on Telegram — Alternate feeds — Match clips — Join the Dugout now •</span>
+      <span>New backup links drop daily on Telegram — Alternate feeds — Match clips — Join the Dugout now •</span>
+    </div>
+  </div>
+
+  <!-- Dugout CTA panel -->
+  <div class="dugout">
+    <div class="tag">Never Miss A Moment</div>
+    <h2>Join The Dugout</h2>
+    <p>Get alternate HD feeds, match clips and instant alerts the moment a stream drops, straight from our Telegram channel.</p>
+
+    <a href="https://t.me/pullxedge" class="btn-solid-red rgb-glow" target="_blank">Join Telegram Now</a>
+
+    <div class="utility-row">
+      <div class="util-btn" id="btnShare">Share App</div>
+      <div class="util-btn" id="btnCopy">Copy Link</div>
+    </div>
+  </div>
+
+  <footer>
+    Made By Sai
+    <span class="copyright">© PULLXEDGE</span>
+  </footer>
+</div>
+
+<div id="toast" class="toast">Stream loaded</div>
+
+<script>
+"use strict";
+
+const CONFIG = {
+  telegramLink: "https://t.me/pullxedge",
+  streamUrl: "https://sonucdn-v2.pages.dev/star?id=STEN3"
+};
+
+let toastTimer = null;
+
+const DOM = {
+  streamFrame: document.getElementById("streamFrame"),
+  errorOverlay: document.getElementById("errorOverlay"),
+  errorMsg: document.getElementById("errorMsg"),
+  retryBtn: document.getElementById("retryBtn"),
+  tgPopup: document.getElementById("tgPopup"),
+  toast: document.getElementById("toast"),
+  btnShare: document.getElementById("btnShare"),
+  btnCopy: document.getElementById("btnCopy"),
+  tgJoinBtn: document.getElementById("tgJoinBtn"),
+  tgCloseBtn: document.getElementById("tgCloseBtn")
+};
+
+function showToast(msg, duration = 2600) {
+  clearTimeout(toastTimer);
+  DOM.toast.textContent = msg;
+  DOM.toast.classList.add("show");
+  toastTimer = setTimeout(() => DOM.toast.classList.remove("show"), duration);
+}
+
+function showError(msg) {
+  DOM.errorMsg.textContent = msg || "Playback initialization error occurred.";
+  DOM.errorOverlay.classList.add("visible");
+}
+
+function hideError() {
+  DOM.errorOverlay.classList.remove("visible");
+}
+
+function loadStream() {
+  hideError();
+  try {
+    DOM.streamFrame.src = CONFIG.streamUrl;
+    showToast("Stream loaded");
+  } catch (err) {
+    showError("Failed to load stream source.");
+  }
+}
+
+function handleShare() {
+  const shareData = { title: document.title, text: "Watch Live Streams Free on PULLXEDGE", url: window.location.href };
+  if (navigator.share) {
+    navigator.share(shareData).catch(()=>{});
+  } else {
+    copyToClipboard();
+  }
+}
+
+function copyToClipboard() {
+  navigator.clipboard.writeText(window.location.href)
+    .then(() => showToast("Application Link copied!"))
+    .catch(() => alert("URL: " + window.location.href));
+}
+
+function verifyAndStart() {
+  if (sessionStorage.getItem("crate_auth_pass") === "true") {
+    loadStream();
+  } else {
+    DOM.tgPopup.classList.add("visible");
+  }
+}
+
+function initEvents() {
+  DOM.retryBtn.addEventListener("click", loadStream);
+  DOM.btnShare.addEventListener("click", handleShare);
+  DOM.btnCopy.addEventListener("click", copyToClipboard);
+
+  DOM.tgJoinBtn.addEventListener("click", () => {
+    window.open(CONFIG.telegramLink, "_blank");
+    DOM.tgPopup.classList.remove("visible");
+    sessionStorage.setItem("crate_auth_pass", "true");
+    loadStream();
+  });
+
+  DOM.tgCloseBtn.addEventListener("click", () => {
+    DOM.tgPopup.classList.remove("visible");
+    sessionStorage.setItem("crate_auth_pass", "true");
+    loadStream();
+  });
+
+  verifyAndStart();
+}
+
+// Anti-Iframe Deployment Guard + Boot Event Management
+if (window.top !== window.self) {
+  document.documentElement.innerHTML = "";
+} else {
+  initEvents();
+}
+</script>
+
+</body>
+  </html>
